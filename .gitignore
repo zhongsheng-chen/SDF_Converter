@@ -1,0 +1,6 @@
+# ignore git's automatically generated directories and files.
+.idea/
+
+# ignore generated files.
+*.pyc
+.DS_Store

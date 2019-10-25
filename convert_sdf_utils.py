@@ -244,7 +244,8 @@ def convert_to_sdf(path_to_bad_sdf, failed_block_file_name=None, output_dir=None
 
     out_dir, sdf_name = os.path.split(path_to_bad_sdf)
     if output_dir is '':
-        output_dir = out_dir
+        output_dir = os.path.abspath(out_dir)
+    output_dir = os.path.abspath(output_dir)
     save_valid_mol_block_to_path = os.path.join(output_dir, ('converted_%s' % sdf_name))
     save_failed_mol_block_to_path = os.path.join(output_dir, failed_block_file_name)
 
