@@ -1,4 +1,4 @@
-# ignore git's automatically generated directories and files.
+# ignore idea folder.
 .idea/
 
 # ignore generated files.

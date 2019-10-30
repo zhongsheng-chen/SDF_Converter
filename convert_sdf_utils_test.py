@@ -35,7 +35,7 @@ class ConvertSDFUtilsTest(tf.test.TestCase, parameterized.TestCase):
 
     def setUp(self):
         self.test_data_directory = _make_test_dir('test_dataset/')
-        self.test_bad_sdf_name = os.path.join(self.test_data_directory, 'test_mona_vf_npl_2_mol_block.sdf')
+        self.test_bad_sdf_name = os.path.join(self.test_data_directory, 'test_mona_vf_npl.sdf')
         self.out_dir = tempfile.mkdtemp(dir=absltest.get_default_test_tmpdir())
 
     def tearDown(self):

@@ -1,9 +1,10 @@
-# A SDF conversion utility
+# A SDF Conversion Tool
 This utility is intended to handle SDF files from [Mass of North America (MoNA)](https://mona.fiehnlab.ucdavis.edu)
 
 ## Package requirement
 + [Tensorflow 1.14.0](https://www.tensorflow.org/install/pip)
 + [RDKit 2018.09.3](https://www.rdkit.org/docs/Install.html)
++ [Openbabel 3.0.0](http://openbabel.org/wiki/Category:Installation)
 
 
 ## Dataset description
@@ -27,7 +28,7 @@ converted SDF file should be saved.
 ```
 $ python convert_sdf_utils.py \
 
-            --path_to_sdf_like_file=/sdf/like/file/path \
+            --path_to_bad_sdf=/sdf/like/file/path \
 
             --failed_block_file_name=/save/failed/block/to/file \
 

@@ -17,7 +17,7 @@ Molecule block are loaded and then append 'M  END' and other lines to make sure 
 
 Example:
         $ python convert_sdf_utils.py \
-            --path_to_sdf_like_file=/sdf/like/file/path \
+            --path_to_bad_sdf=/sdf/like/file/path \
             --failed_block_file_name=/save/failed/block/to/file \
             --output_dir=/save/path/to/converted/sdf \
             --alsologtostderr
@@ -105,7 +105,7 @@ def _make_mol_block_rational(mol_block):
     Note that although some missing lines and a molecule reading flag (M END) has been filled up,
     for some unknown reasons, considerable molecule blocks can not be successfully recognized as expected.
     I found that OpenBabel can calibrate those. The reason this phenomenon may
-    lie in wrong values in their atom blocks values, making molecule blocks rational.
+    lie in wrong values in their atom blocks values, making molecule blocks corrupted.
 
     Args:
         mol_block: A raw mol_block (list of string )
@@ -185,12 +185,19 @@ def _get_prop_value_from_mol_block(block, prop_key):
         return prop_value
 
 
-def _write_mol_block_to_file(save_to_path, mol_block):
+def _write_mol_block_to_file(save_to_path, mol_block_list):
     """ Write a molecule block to a file"""
 
-    with tf.gfile.Open(save_to_path, 'w') as writer:
-        for line in mol_block:
-            writer.write('%s\n' % line)
+    def __mol_block_writer(mode):
+        with tf.gfile.Open(save_to_path, mode) as writer:
+            for line in mol_block:
+                writer.write('%s\n' % line)
+
+    for index, mol_block in enumerate(mol_block_list):
+        if index == 0:
+            __mol_block_writer(mode='w')
+        else:
+            __mol_block_writer(mode='a')
 
 
 def _check_mol_block_has_all_prop(mol_block):
@@ -202,6 +209,16 @@ def _check_mol_block_has_all_prop(mol_block):
     # I will check if each block of every molecule has all the tags:
     #  'MASS SPECTRAL PEAKS', 'INCHIKEY', 'INCHI', NAME', 'EXACT MASS'
     return np.all(prop_check_status)
+
+
+def _max_atoms_in_mol_block(mol_block_list):
+    max_num_atoms = -1024
+    for mol_block in mol_block_list:
+        mol_str = '\n'.join(mol_block)
+        mol = pybel.readstring('sdf', mol_str)
+        if len(mol.atoms) > max_num_atoms:
+            max_num_atoms = len(mol.atoms)
+        return max(max_num_atoms, 0)
 
 
 def convert_to_sdf(path_to_bad_sdf, failed_block_file_name=None, output_dir=None):
@@ -229,8 +246,8 @@ def convert_to_sdf(path_to_bad_sdf, failed_block_file_name=None, output_dir=None
         mol_str = suppl.GetItemText(index).strip().splitlines()
         mol_block = _make_mol_block_rational(_make_mol_block_from_string(mol_str))
 
-        # if mol_block is not None:
-        mol_block_list.append(mol_block)
+        if mol_block is not None:
+            mol_block_list.append(mol_block)
 
     num_failed = 0
     valid_mol_block_list = []
@@ -249,19 +266,19 @@ def convert_to_sdf(path_to_bad_sdf, failed_block_file_name=None, output_dir=None
     save_valid_mol_block_to_path = os.path.join(output_dir, ('converted_%s' % sdf_name))
     save_failed_mol_block_to_path = os.path.join(output_dir, failed_block_file_name)
 
-    for index, valid_mol_block in enumerate(valid_mol_block_list):
-        _write_mol_block_to_file(save_valid_mol_block_to_path, valid_mol_block)
-
+    max_num_atoms = 0
+    if valid_mol_block_list:
+        _write_mol_block_to_file(save_valid_mol_block_to_path, valid_mol_block_list)
+        max_num_atoms = _max_atoms_in_mol_block(valid_mol_block_list)
     if failed_block_file_name and failed_mol_block_list:
-        for index, failed_mol_block in enumerate(failed_mol_block_list):
-            _write_mol_block_to_file(save_failed_mol_block_to_path, failed_mol_block)
-
+        _write_mol_block_to_file(save_failed_mol_block_to_path, failed_mol_block_list)
     num_valid_mol_block = len(valid_mol_block_list)
     num_failed_mol_block = len(failed_mol_block_list)
     logging.warning(('Processing on %s from Massbank of North America (MoNA) finished. '
                      'Except for %d failed molecule blocks, totally, '
-                     '%d molecules have been converted to a read-friendly SDF saved in the path %s'),
-                    sdf_name, num_failed_mol_block, num_valid_mol_block, save_valid_mol_block_to_path)
+                     '%d molecules have been converted to a read-friendly SDF saved in the path %s. '
+                     'The maximum number of atoms among these molecules is %d.'),
+                    sdf_name, num_failed_mol_block, num_valid_mol_block, save_valid_mol_block_to_path, max_num_atoms)
 
 
 def main(_):
