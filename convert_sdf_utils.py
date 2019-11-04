@@ -5,7 +5,7 @@
 # Date: 10/10/2019
 # Copyright: Copyright 2019, Beijing University of Chemical Technology
 # License: The MIT License (MIT)
-# Email: zhongsheng.chen@outlook.com
+# Email: zschen@mail.buct.edu.cn
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 r"""A helper function for processing SDF-like dataset files from MoNA.
@@ -218,7 +218,7 @@ def _max_atoms_in_mol_block(mol_block_list):
         mol = pybel.readstring('sdf', mol_str)
         if len(mol.atoms) > max_num_atoms:
             max_num_atoms = len(mol.atoms)
-        return max(max_num_atoms, 0)
+    return max(max_num_atoms, 0)
 
 
 def convert_to_sdf(path_to_bad_sdf, failed_block_file_name=None, output_dir=None):
@@ -235,6 +235,12 @@ def convert_to_sdf(path_to_bad_sdf, failed_block_file_name=None, output_dir=None
             blocks are skipped, no failed molecule block written to file.
         output_dir: Directory to the converted sdf file if set.  By default (None), the directory of the sdf-like data
             file will be set as output directory.
+    Returns:
+        valid_mol_block_list: A list of molecular blocks converted successfully
+        failed_mol_block_list: A list of molecular blocks corrupted.
+        num_valid_mol_block: How many numbers of molecular blocks converted successfully.
+        num_failed_mol_block: How many numbers of molecular blocks are so corrupted that they can not be converted.
+        max_num_atoms: Maximum number of atoms in those molecules converted successfully.
     """
 
     suppl = Chem.SDMolSupplier(path_to_bad_sdf)
@@ -279,6 +285,7 @@ def convert_to_sdf(path_to_bad_sdf, failed_block_file_name=None, output_dir=None
                      '%d molecules have been converted to a read-friendly SDF saved in the path %s. '
                      'The maximum number of atoms among these molecules is %d.'),
                     sdf_name, num_failed_mol_block, num_valid_mol_block, save_valid_mol_block_to_path, max_num_atoms)
+    return valid_mol_block_list, failed_mol_block_list, num_valid_mol_block, num_failed_mol_block, max_num_atoms
 
 
 def main(_):

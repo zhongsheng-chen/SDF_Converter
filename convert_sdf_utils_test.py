@@ -23,7 +23,6 @@ from absl.testing import absltest
 from absl.testing import parameterized
 
 import convert_sdf_utils
-import parse_sdf_utils
 
 
 def _make_test_dir(relative_path):
@@ -35,22 +34,24 @@ class ConvertSDFUtilsTest(tf.test.TestCase, parameterized.TestCase):
 
     def setUp(self):
         self.test_data_directory = _make_test_dir('test_dataset/')
-        self.test_bad_sdf_name = os.path.join(self.test_data_directory, 'test_mona_vf_npl.sdf')
+        self.test_bad_sdf_name = os.path.join(self.test_data_directory, 'MoNA-export-HMDB.sdf')
         self.out_dir = tempfile.mkdtemp(dir=absltest.get_default_test_tmpdir())
 
     def tearDown(self):
         tf.gfile.DeleteRecursively(self.out_dir)
 
     def test_convert_to_sdf(self):
-        convert_sdf_utils.convert_to_sdf(
+        _, _, num_mol, num_failed_mol_block, max_num_atoms = convert_sdf_utils.convert_to_sdf(
             self.test_bad_sdf_name,
             failed_block_file_name='test_mona_vf_npl_failed_blocks.sdf',
             output_dir=self.out_dir)
-        path_to_converted_sdf = os.path.join(self.out_dir,
-                                             'converted_{}'.format(os.path.split(self.test_bad_sdf_name)[1]))
-        mol_list = parse_sdf_utils.get_sdf_to_mol(path_to_converted_sdf)
-        expected_mol_list_len = 1
-        self.assertEqual(len(mol_list), expected_mol_list_len)
+
+        expected_num_mol = 8540
+        expected_num_failed_mol_block = 0
+        expected_max_num_atoms = 92
+        self.assertEqual(num_mol, expected_num_mol)
+        self.assertEqual(num_failed_mol_block, expected_num_failed_mol_block)
+        self.assertEqual(max_num_atoms, expected_max_num_atoms)
 
 
 if __name__ == '__main__':
